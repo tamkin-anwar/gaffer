@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Tandem — Watch Together",
+  "version": "0.1.0",
+  "description": "Sync playback with someone far away, across the streaming services you already have, plus a shared notes space.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://*.netflix.com/*",
+    "https://*.firebaseio.com/*",
+    "https://*.firebasedatabase.app/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://*.netflix.com/*"],
+      "js": ["content_scripts/sync-core.js", "content_scripts/netflix.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

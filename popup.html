@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tandem</title>
+<style>
+  :root {
+    --ink: #241b14; --ink-soft: #8a7a6c; --paper: #fbf6f0; --accent: #d9773f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    width: 320px; margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    background: var(--paper); color: var(--ink);
+  }
+  h1 { font-size: 15px; margin: 0 0 2px; }
+  .sub { font-size: 11.5px; color: var(--ink-soft); margin: 0 0 14px; }
+  section { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid rgba(0,0,0,0.08); }
+  section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin-bottom: 5px; }
+  input[type=text], textarea {
+    width: 100%; font: inherit; font-size: 13px; padding: 7px 9px;
+    border: 1px solid rgba(0,0,0,0.15); border-radius: 7px; background: #fff; color: var(--ink);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  .row { display: flex; gap: 6px; }
+  .row input { flex: 1; }
+  button {
+    font: 600 12px inherit; padding: 7px 12px; border: none; border-radius: 7px;
+    background: var(--accent); color: #fff; cursor: pointer;
+  }
+  button.secondary { background: rgba(0,0,0,0.08); color: var(--ink); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .status { font-size: 11px; margin-top: 6px; }
+  .status.ok { color: #1f8a4c; }
+  .status.err { color: #b23; }
+  #roomCode { font: 700 16px ui-monospace, monospace; letter-spacing: 0.06em; }
+  #chatLog { max-height: 110px; overflow-y: auto; font-size: 12px; margin-bottom: 6px; }
+  #chatLog div { margin-bottom: 4px; }
+  #chatLog .me { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+  <h1>Tandem</h1>
+  <p class="sub">Watch together, in sync, wherever you both are.</p>
+
+  <section id="setupSection">
+    <label for="dbUrlInput">Firebase Database URL</label>
+    <div class="row">
+      <input type="text" id="dbUrlInput" placeholder="https://your-project-default-rtdb.firebaseio.com">
+      <button id="saveDbUrl">Save</button>
+    </div>
+    <div class="status" id="dbUrlStatus"></div>
+  </section>
+
+  <section>
+    <label>Your room</label>
+    <div class="row">
+      <input type="text" id="roomCode" readonly>
+      <button class="secondary" id="copyRoom">Copy</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <input type="text" id="joinCodeInput" placeholder="Or enter their room code">
+      <button id="joinRoom">Join</button>
+    </div>
+  </section>
+
+  <section>
+    <label>Shared notes</label>
+    <textarea id="notesArea" placeholder="Anything you want to remember together — what to watch next, plans, whatever."></textarea>
+    <div class="status" id="notesStatus"></div>
+  </section>
+
+  <section>
+    <label>Chat</label>
+    <div id="chatLog"></div>
+    <div class="row">
+      <input type="text" id="chatInput" placeholder="Say something">
+      <button id="sendChat">Send</button>
+    </div>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>
