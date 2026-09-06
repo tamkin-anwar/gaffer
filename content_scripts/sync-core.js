@@ -64,24 +64,46 @@
     fetch(roomUrl('sync'), { method: 'PUT', body: JSON.stringify(payload) }).catch((e) => log('push failed', e));
   }
 
+  // Runs `fn`, which may set video.currentTime, while suppressing the
+  // pushSync() that would otherwise fire off the resulting native events.
+  // A seek on a slow connection can take a while to actually settle (it
+  // waits on buffering), so guessing a fixed timeout risks lifting the
+  // guard before the real 'seeked' event arrives, which would then get
+  // mistaken for a fresh local action and re-broadcast. Confirm on the
+  // real event instead, with a generous timeout only as a fallback for the
+  // case where no seek actually happened.
+  function withRemoteGuard(fn, mayNeedSeek) {
+    const el = video; // captured now, in case the player gets swapped out mid-guard (an episode change, say)
+    applyingRemote = true;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      applyingRemote = false;
+      el.removeEventListener('seeked', finish);
+    };
+    if (mayNeedSeek) el.addEventListener('seeked', finish);
+    fn();
+    setTimeout(finish, mayNeedSeek ? 4000 : APPLY_REMOTE_GUARD_MS);
+  }
+
   function applyRemote(data) {
     if (!data || data.from === CLIENT_ID || !video) return;
-    applyingRemote = true;
     lastRemote = { time: data.time, ts: data.ts, playing: data.playing };
     const localTime = data.time + Math.max(0, (serverNow() - data.ts) / 1000); // account for time in transit
-    if (Math.abs(video.currentTime - localTime) > 0.35) video.currentTime = localTime;
-    if (data.playing && video.paused) video.play().catch(() => {});
-    if (!data.playing && !video.paused) video.pause();
-    setTimeout(() => { applyingRemote = false; }, APPLY_REMOTE_GUARD_MS);
+    const needsSeek = Math.abs(video.currentTime - localTime) > 0.35;
+    withRemoteGuard(() => {
+      if (needsSeek) video.currentTime = localTime;
+      if (data.playing && video.paused) video.play().catch(() => {});
+      if (!data.playing && !video.paused) video.pause();
+    }, needsSeek);
   }
 
   function checkDrift() {
     if (!lastRemote || !lastRemote.playing || !video || video.paused || applyingRemote) return;
     const expected = lastRemote.time + (serverNow() - lastRemote.ts) / 1000;
     if (Math.abs(video.currentTime - expected) > DRIFT_TOLERANCE_S) {
-      applyingRemote = true;
-      video.currentTime = expected;
-      setTimeout(() => { applyingRemote = false; }, APPLY_REMOTE_GUARD_MS);
+      withRemoteGuard(() => { video.currentTime = expected; }, true);
     }
   }
 
@@ -102,15 +124,28 @@
     es.onerror = () => { onStatus('disconnected'); };
   }
 
+  let videoListeners = null;
+
   function attachVideo(el) {
     video = el;
-    video.addEventListener('play', () => pushSync('play'));
-    video.addEventListener('pause', () => pushSync('pause'));
-    video.addEventListener('seeked', () => pushSync('seek'));
+    videoListeners = {
+      play: () => pushSync('play'),
+      pause: () => pushSync('pause'),
+      seeked: () => pushSync('seek'),
+    };
+    video.addEventListener('play', videoListeners.play);
+    video.addEventListener('pause', videoListeners.pause);
+    video.addEventListener('seeked', videoListeners.seeked);
     driftTimer = setInterval(checkDrift, DRIFT_CHECK_MS);
   }
 
   function detachVideo() {
+    if (video && videoListeners) {
+      video.removeEventListener('play', videoListeners.play);
+      video.removeEventListener('pause', videoListeners.pause);
+      video.removeEventListener('seeked', videoListeners.seeked);
+    }
+    videoListeners = null;
     video = null;
     if (driftTimer) clearInterval(driftTimer);
   }
