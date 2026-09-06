@@ -8,13 +8,17 @@ Same architecture as Teleparty/SyncUp: this never touches the actual video strea
 
 That also means **it only works when you're both watching in a desktop browser tab** (e.g. netflix.com in Chrome) — it can't reach into Netflix's iPhone or Smart TV apps, since those don't expose any way for a third-party extension to see or control them.
 
+**On the sync being tight:** the two of you being on opposite sides of the world is real physical latency (routing plus, at the extreme, speed-of-light delay) — no tool, including Teleparty, can make a message arrive before it physically can. What Tandem does do: it calibrates each tab's clock against the shared database's own clock (rather than trusting either laptop's system clock, which can already be a few hundred ms off), timestamps every play/pause/seek with that corrected time, and continuously nudges playback to compensate for exactly how long a message took in transit — so instead of "wherever the position was when the message was *sent*," you land on "wherever the position *actually is right now*, accounting for transit." That's the same principle behind any properly-engineered low-latency sync, and it's the main lever available once the physical distance is fixed.
+
+**On the VPN:** since Tandem only ever calls the standard play/pause/seek controls on whichever tab is open — never touching the video stream itself — a VPN on her end (for Disney+/HBO Max) doesn't affect Tandem at all. It only matters for whether Netflix/Disney+ let the stream through in the first place, which is entirely between her and them.
+
 ## One-time setup (you'll need to do this part)
 
 Firebase Realtime Database is the shared "phone line" between your two tabs. I can't create this account for you, but it takes about two minutes:
 
 1. Go to [firebase.google.com](https://firebase.google.com) → **Get started** → sign in with any Google account.
 2. **Add project** → name it anything (e.g. "tandem") → you can skip Google Analytics → **Create project**.
-3. In the left sidebar, click **Build → Realtime Database** → **Create Database** → pick any location → start in **test mode** for now (we'll paste in real rules below).
+3. In the left sidebar, click **Build → Realtime Database** → **Create Database**. For the location, pick **Singapore (asia-southeast1)** — with one of you in Bangladesh, a database on the other side of the world (the US default) adds real, physical round-trip delay to every sync message; Singapore is the closest available region and meaningfully cuts that lag for both of you. Start in **test mode** for now (we'll paste in real rules below).
 4. Once it's created, copy the URL shown at the top of the database page — it looks like `https://tandem-xxxxx-default-rtdb.firebaseio.com`.
 5. Click the **Rules** tab (next to Data) and replace the contents with:
    ```json

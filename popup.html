@@ -5,80 +5,174 @@
 <title>Tandem</title>
 <style>
   :root {
-    --ink: #241b14; --ink-soft: #8a7a6c; --paper: #fbf6f0; --accent: #d9773f;
+    --ink: #1c1c1e;
+    --ink-soft: #8a8a8e;
+    --paper: #f2f2f7;
+    --card: #ffffff;
+    --accent: #007aff;
+    --accent-soft: rgba(0,122,255,0.1);
+    --green: #34c759;
+    --red: #ff3b30;
+    --hairline: rgba(60,60,67,0.12);
+    --radius: 14px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
   }
-  * { box-sizing: border-box; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #f2f2f7; --ink-soft: #98989d; --paper: #1c1c1e; --card: #2c2c2e;
+      --accent-soft: rgba(10,132,255,0.18); --hairline: rgba(255,255,255,0.12);
+    }
+  }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
   body {
-    width: 320px; margin: 0; padding: 16px;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    width: 340px; margin: 0;
+    font-family: var(--font);
     background: var(--paper); color: var(--ink);
+    -webkit-user-select: none; user-select: none;
   }
-  h1 { font-size: 15px; margin: 0 0 2px; }
-  .sub { font-size: 11.5px; color: var(--ink-soft); margin: 0 0 14px; }
-  section { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid rgba(0,0,0,0.08); }
-  section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-  label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin-bottom: 5px; }
+  input, textarea { -webkit-user-select: text; user-select: text; }
+
+  header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 18px 12px;
+  }
+  .logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, #5ac8fa, #007aff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  header h1 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .status-pill {
+    margin-left: auto; display: flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 500; color: var(--ink-soft);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-soft); transition: background 0.25s; }
+  .dot.connected { background: var(--green); }
+  .dot.disconnected { background: var(--red); }
+
+  nav {
+    display: flex; margin: 0 18px 14px; padding: 3px;
+    background: var(--hairline); border-radius: 10px;
+  }
+  nav button {
+    flex: 1; border: none; background: transparent; padding: 6px 0;
+    font: 600 12.5px var(--font); color: var(--ink-soft); border-radius: 8px;
+    cursor: pointer; transition: background 0.2s, color 0.2s;
+  }
+  nav button.active { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  .panel { display: none; padding: 0 18px 18px; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--card); border-radius: var(--radius); padding: 14px;
+    margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .card + .card { margin-top: 10px; }
+  label {
+    display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--ink-soft); margin-bottom: 8px;
+  }
   input[type=text], textarea {
-    width: 100%; font: inherit; font-size: 13px; padding: 7px 9px;
-    border: 1px solid rgba(0,0,0,0.15); border-radius: 7px; background: #fff; color: var(--ink);
+    width: 100%; font: 500 14px var(--font); padding: 9px 11px;
+    border: none; border-radius: 9px; background: var(--paper); color: var(--ink);
+    outline: none;
   }
-  textarea { resize: vertical; min-height: 60px; }
-  .row { display: flex; gap: 6px; }
+  input[type=text]:focus, textarea:focus { box-shadow: 0 0 0 2px var(--accent); }
+  textarea { resize: none; min-height: 90px; line-height: 1.4; font-weight: 400; }
+
+  .room-code {
+    font: 700 22px ui-monospace, "SF Mono", monospace; letter-spacing: 0.08em;
+    text-align: center; padding: 14px; background: var(--accent-soft); color: var(--accent);
+    border-radius: 11px; margin-bottom: 10px;
+  }
+  .row { display: flex; gap: 8px; }
   .row input { flex: 1; }
-  button {
-    font: 600 12px inherit; padding: 7px 12px; border: none; border-radius: 7px;
-    background: var(--accent); color: #fff; cursor: pointer;
+
+  button.btn {
+    font: 600 13.5px var(--font); padding: 9px 16px; border: none; border-radius: 10px;
+    background: var(--accent); color: #fff; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
   }
-  button.secondary { background: rgba(0,0,0,0.08); color: var(--ink); }
-  button:disabled { opacity: 0.4; cursor: default; }
-  .status { font-size: 11px; margin-top: 6px; }
-  .status.ok { color: #1f8a4c; }
-  .status.err { color: #b23; }
-  #roomCode { font: 700 16px ui-monospace, monospace; letter-spacing: 0.06em; }
-  #chatLog { max-height: 110px; overflow-y: auto; font-size: 12px; margin-bottom: 6px; }
-  #chatLog div { margin-bottom: 4px; }
-  #chatLog .me { color: var(--accent); font-weight: 600; }
+  button.btn:active { transform: scale(0.97); opacity: 0.85; }
+  button.btn.secondary { background: var(--hairline); color: var(--ink); }
+  button.btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+  .full { width: 100%; }
+
+  .hint { font-size: 11.5px; color: var(--ink-soft); margin-top: 8px; line-height: 1.4; }
+  .save-flash { font-size: 11px; color: var(--green); opacity: 0; transition: opacity 0.3s; height: 14px; margin-top: 6px; }
+  .save-flash.show { opacity: 1; }
+  .err-flash { font-size: 11.5px; color: var(--red); margin-top: 8px; line-height: 1.4; }
+
+  #chatLog {
+    display: flex; flex-direction: column; gap: 6px;
+    max-height: 200px; overflow-y: auto; margin-bottom: 10px; padding: 2px;
+  }
+  .bubble {
+    max-width: 78%; padding: 7px 11px; border-radius: 16px; font-size: 13px; line-height: 1.35;
+  }
+  .bubble.me { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .bubble.them { align-self: flex-start; background: var(--hairline); color: var(--ink); border-bottom-left-radius: 4px; }
+  .empty-state { text-align: center; color: var(--ink-soft); font-size: 12px; padding: 18px 0; }
 </style>
 </head>
 <body>
-  <h1>Tandem</h1>
-  <p class="sub">Watch together, in sync, wherever you both are.</p>
+  <header>
+    <div class="logo">🤝</div>
+    <h1>Tandem</h1>
+    <div class="status-pill"><span class="dot" id="statusDot"></span><span id="statusText">—</span></div>
+  </header>
 
-  <section id="setupSection">
-    <label for="dbUrlInput">Firebase Database URL</label>
-    <div class="row">
-      <input type="text" id="dbUrlInput" placeholder="https://your-project-default-rtdb.firebaseio.com">
-      <button id="saveDbUrl">Save</button>
-    </div>
-    <div class="status" id="dbUrlStatus"></div>
-  </section>
+  <nav>
+    <button class="tab-btn active" data-tab="room">Room</button>
+    <button class="tab-btn" data-tab="notes">Notes</button>
+    <button class="tab-btn" data-tab="chat">Chat</button>
+  </nav>
 
-  <section>
-    <label>Your room</label>
-    <div class="row">
-      <input type="text" id="roomCode" readonly>
-      <button class="secondary" id="copyRoom">Copy</button>
+  <div class="panel active" id="panel-room">
+    <div class="card" id="setupCard">
+      <label>Firebase Database URL</label>
+      <div class="row">
+        <input type="text" id="dbUrlInput" placeholder="https://your-project-default-rtdb.firebaseio.com">
+      </div>
+      <button class="btn full" id="saveDbUrl" style="margin-top:8px">Connect</button>
+      <div class="err-flash" id="dbUrlStatus"></div>
     </div>
-    <div class="row" style="margin-top:8px">
-      <input type="text" id="joinCodeInput" placeholder="Or enter their room code">
-      <button id="joinRoom">Join</button>
-    </div>
-  </section>
 
-  <section>
-    <label>Shared notes</label>
-    <textarea id="notesArea" placeholder="Anything you want to remember together — what to watch next, plans, whatever."></textarea>
-    <div class="status" id="notesStatus"></div>
-  </section>
-
-  <section>
-    <label>Chat</label>
-    <div id="chatLog"></div>
-    <div class="row">
-      <input type="text" id="chatInput" placeholder="Say something">
-      <button id="sendChat">Send</button>
+    <div class="card">
+      <label>Your room code</label>
+      <div class="room-code" id="roomCode">······</div>
+      <button class="btn secondary full" id="copyRoom">Copy code</button>
     </div>
-  </section>
+
+    <div id="changeDbLink" style="text-align:center; font-size:11.5px; color:var(--ink-soft); cursor:pointer;">Change database URL</div>
+
+    <div class="card">
+      <label>Joining someone else's room</label>
+      <div class="row">
+        <input type="text" id="joinCodeInput" placeholder="Their code">
+        <button class="btn" id="joinRoom">Join</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-notes">
+    <div class="card">
+      <label>Shared notes</label>
+      <textarea id="notesArea" placeholder="Anything you want to remember together — what to watch next, plans, whatever."></textarea>
+      <div class="save-flash" id="notesStatus">Saved</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-chat">
+    <div class="card">
+      <div id="chatLog"><div class="empty-state">No messages yet</div></div>
+      <div class="row">
+        <input type="text" id="chatInput" placeholder="Say something">
+        <button class="btn" id="sendChat">Send</button>
+      </div>
+    </div>
+  </div>
 
   <script src="popup.js"></script>
 </body>
