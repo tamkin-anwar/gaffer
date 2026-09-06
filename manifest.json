@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Tandem — Watch Together",
+  "name": "Tandem: Watch Together",
   "version": "0.1.0",
   "description": "Sync playback with someone far away, across the streaming services you already have, plus a shared notes space.",
   "action": {

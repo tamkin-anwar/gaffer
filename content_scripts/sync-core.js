@@ -1,11 +1,11 @@
 // ---------------------------------------------------------------------------
-// Tandem sync core — shared by every site-specific adapter (netflix.js, etc).
+// Tandem sync core. Shared by every site-specific adapter (netflix.js, etc).
 //
-// Talks to Firebase Realtime Database over plain REST + the RTDB streaming
-// API (Server-Sent Events on a .json endpoint), not the Firebase SDK. That
-// keeps the extension dependency-free and avoids Manifest V3's restrictions
-// on remote code in content scripts — this is just fetch() and EventSource,
-// both native.
+// Talks to Firebase Realtime Database over plain REST plus the RTDB
+// streaming API (Server-Sent Events on a .json endpoint), not the Firebase
+// SDK. That keeps the extension dependency-free and avoids Manifest V3's
+// restrictions on remote code in content scripts. This is just fetch() and
+// EventSource, both native.
 //
 // A note on why sync lives in each content script rather than the background
 // service worker: MV3 service workers get suspended after ~30s of
@@ -25,7 +25,7 @@
   let video = null;
   let es = null;            // EventSource
   let applyingRemote = false;
-  let lastRemote = null;    // { time, ts, playing } — for drift correction
+  let lastRemote = null;    // { time, ts, playing }, used for drift correction
   let driftTimer = null;
   let clockTimer = null;
   let serverOffsetMs = 0;   // add to Date.now() to estimate the Firebase server's clock
@@ -38,7 +38,7 @@
   }
 
   // Over a long-distance connection, the two devices' own clocks can easily
-  // be a few hundred ms apart — enough to matter for tight sync. Rather than
+  // be a few hundred ms apart, enough to matter for tight sync. Rather than
   // trust each device's local clock, calibrate once against the shared
   // Firebase server's clock (the same NTP-style trick used for any
   // low-latency sync): write a server-timestamp placeholder, see what the

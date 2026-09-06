@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Netflix adapter — finds the <video> element and keeps TandemSync pointed at
+// Netflix adapter. Finds the <video> element and keeps TandemSync pointed at
 // it as Netflix's single-page app swaps the player in and out (browsing vs.
 // watching, changing episodes, etc).
 // ---------------------------------------------------------------------------

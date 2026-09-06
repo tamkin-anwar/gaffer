@@ -1,5 +1,5 @@
-// Talks to Firebase Realtime Database over plain REST — see
-// content_scripts/sync-core.js for why there's no Firebase SDK involved.
+// Talks to Firebase Realtime Database over plain REST.
+// See content_scripts/sync-core.js for why there's no Firebase SDK involved.
 
 const dbUrlInput = document.getElementById('dbUrlInput');
 const saveDbUrlBtn = document.getElementById('saveDbUrl');
@@ -64,7 +64,7 @@ async function testConnection() {
     setConnectionStatus('connected');
     return true;
   } catch (e) {
-    dbUrlStatus.textContent = "Couldn't reach that database — check the URL and that it's a Realtime Database (not Firestore).";
+    dbUrlStatus.textContent = "Couldn't reach that database. Check the URL and that it's a Realtime Database (not Firestore).";
     setConnectionStatus('disconnected');
     return false;
   }
