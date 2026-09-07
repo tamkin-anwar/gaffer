@@ -130,7 +130,7 @@
   </nav>
 
   <div class="panel active" id="panel-room">
-    <div class="card" id="setupCard">
+    <div class="card" id="setupCard" style="display:none">
       <label>Firebase Database URL</label>
       <div class="row">
         <input type="text" id="dbUrlInput" placeholder="https://your-project-default-rtdb.firebaseio.com">
@@ -143,9 +143,8 @@
       <label>Your room code</label>
       <div class="room-code" id="roomCode">······</div>
       <button class="btn secondary full" id="copyRoom">Copy code</button>
+      <div class="hint">Send this to whoever you're watching with. They just need this code, nothing else to set up.</div>
     </div>
-
-    <div id="changeDbLink" style="text-align:center; font-size:11.5px; color:var(--ink-soft); cursor:pointer;">Change database URL</div>
 
     <div class="card">
       <label>Joining someone else's room</label>
@@ -154,6 +153,8 @@
         <button class="btn" id="joinRoom">Join</button>
       </div>
     </div>
+
+    <div id="changeDbLink" style="text-align:center; font-size:11px; color:var(--ink-soft); cursor:pointer; margin-top:4px;">Use a different database (advanced)</div>
   </div>
 
   <div class="panel" id="panel-notes">

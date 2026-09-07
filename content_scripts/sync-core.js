@@ -15,6 +15,11 @@
 // ---------------------------------------------------------------------------
 
 (function () {
+  // Same shared database baked into the popup (see popup.js). Falls back to
+  // this if the popup has never been opened on this install yet, so
+  // playback sync still works the moment two people share a room code.
+  const DEFAULT_DB_URL = 'https://tether-643cf-default-rtdb.asia-southeast1.firebasedatabase.app';
+
   const CLIENT_ID = 'c_' + Math.random().toString(36).slice(2, 10);
   const APPLY_REMOTE_GUARD_MS = 400; // suppress re-broadcasting a change we just applied ourselves
   const DRIFT_CHECK_MS = 2000;
@@ -163,14 +168,14 @@
     init(statusCallback) {
       onStatus = statusCallback || onStatus;
       chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
-        config = { roomId: stored.roomId, dbUrl: stored.dbUrl };
+        config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
         connect();
       });
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area !== 'sync') return;
         if (changes.roomId || changes.dbUrl) {
           chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
-            config = { roomId: stored.roomId, dbUrl: stored.dbUrl };
+            config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
             connect();
           });
         }

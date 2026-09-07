@@ -1,6 +1,12 @@
 // Talks to Firebase Realtime Database over plain REST.
 // See content_scripts/sync-core.js for why there's no Firebase SDK involved.
 
+// A shared database baked into the extension itself, so installing it is
+// the whole setup: no Firebase account, no URL to find or paste in. Anyone
+// who wants their own private backend instead can still switch it under
+// "Use a different database (advanced)".
+const DEFAULT_DB_URL = 'https://tether-643cf-default-rtdb.asia-southeast1.firebasedatabase.app';
+
 const dbUrlInput = document.getElementById('dbUrlInput');
 const saveDbUrlBtn = document.getElementById('saveDbUrl');
 const dbUrlStatus = document.getElementById('dbUrlStatus');
@@ -185,12 +191,9 @@ chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat()
 // boot
 // ---------------------------------------------------------------------
 chrome.storage.sync.get(['dbUrl', 'roomId'], async (stored) => {
-  if (stored.dbUrl) {
-    dbUrl = stored.dbUrl;
-    dbUrlInput.value = dbUrl;
-    await testConnection();
-  } else {
-    setConnectionStatus('unknown');
-  }
+  dbUrl = stored.dbUrl || DEFAULT_DB_URL;
+  dbUrlInput.value = dbUrl;
+  const ok = await testConnection();
+  if (ok && !stored.dbUrl) chrome.storage.sync.set({ dbUrl }); // remember we're on the default, harmless either way
   enterRoom(stored.roomId || randomRoomCode());
 });
