@@ -57,7 +57,12 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
 // ---------------------------------------------------------------------
 async function testConnection() {
   try {
-    const res = await fetch(`${dbUrl.replace(/\/$/, '')}/.json?shallow=true`);
+    // Check a path actually covered by the security rules (rooms/$roomId),
+    // not the database root: our rules intentionally only grant access
+    // under /rooms/<roomId>, so a root-level check would always come back
+    // "permission denied" even on a perfectly working database.
+    const checkRoomId = roomId || 'connection-check';
+    const res = await fetch(`${dbUrl.replace(/\/$/, '')}/rooms/${encodeURIComponent(checkRoomId)}/.json?shallow=true`);
     if (!res.ok) throw new Error(res.status);
     dbUrlStatus.textContent = '';
     setupCard.style.display = 'none';
