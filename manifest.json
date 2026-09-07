@@ -26,6 +26,9 @@
     "https://*.netflix.com/*",
     "https://*.hulu.com/*",
     "https://*.disneyplus.com/*",
+    "https://*.crunchyroll.com/*",
+    "https://*.max.com/*",
+    "https://*.hbomax.com/*",
     "https://*.firebaseio.com/*",
     "https://*.firebasedatabase.app/*"
   ],
@@ -43,6 +46,16 @@
     {
       "matches": ["https://*.disneyplus.com/*"],
       "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/disneyplus.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.crunchyroll.com/*"],
+      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/crunchyroll.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.max.com/*", "https://*.hbomax.com/*"],
+      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/hbomax.js"],
       "run_at": "document_idle"
     }
   ]
