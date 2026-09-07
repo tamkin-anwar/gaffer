@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Netflix adapter. Finds the <video> element and keeps TandemSync pointed at
+// Netflix adapter. Finds the <video> element and keeps TetherSync pointed at
 // it as Netflix's single-page app swaps the player in and out (browsing vs.
 // watching, changing episodes, etc).
 // ---------------------------------------------------------------------------
@@ -39,7 +39,7 @@
     const labels = {
       connected: ['In sync', '#34c759'],
       disconnected: ['Reconnecting…', '#ff9f0a'],
-      'no-room': ['Open Tandem to join a room', '#8e8e93'],
+      'no-room': ['Open Tether to join a room', '#8e8e93'],
     };
     const [text, color] = labels[status] || ['', '#8e8e93'];
     statusBadge._label.textContent = text;
@@ -53,19 +53,19 @@
     }, 3500);
   }
 
-  window.TandemSync.init(showStatus);
+  window.TetherSync.init(showStatus);
 
   let current = null;
   const observer = new MutationObserver(() => {
     const v = findVideo();
     if (v !== current) {
       current = v;
-      window.TandemSync.setVideo(v);
+      window.TetherSync.setVideo(v);
     }
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
   // catch the case where a video is already present on script injection
   current = findVideo();
-  if (current) window.TandemSync.setVideo(current);
+  if (current) window.TetherSync.setVideo(current);
 })();

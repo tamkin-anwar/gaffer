@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Tandem sync core. Shared by every site-specific adapter (netflix.js, etc).
+// Tether sync core. Shared by every site-specific adapter (netflix.js, etc).
 //
 // Talks to Firebase Realtime Database over plain REST plus the RTDB
 // streaming API (Server-Sent Events on a .json endpoint), not the Firebase
@@ -31,7 +31,7 @@
   let serverOffsetMs = 0;   // add to Date.now() to estimate the Firebase server's clock
   let onStatus = () => {};  // callback(status: 'connected'|'disconnected'|'no-room')
 
-  function log(...args) { console.log('[Tandem]', ...args); }
+  function log(...args) { console.log('[Tether]', ...args); }
 
   function roomUrl(path) {
     return `${config.dbUrl.replace(/\/$/, '')}/rooms/${encodeURIComponent(config.roomId)}/${path}.json`;
@@ -151,9 +151,9 @@
   }
 
   // ---------------------------------------------------------------------
-  // Public API used by site adapters (window.TandemSync.*)
+  // Public API used by site adapters (window.TetherSync.*)
   // ---------------------------------------------------------------------
-  window.TandemSync = {
+  window.TetherSync = {
     clientId: CLIENT_ID,
     /** Call once, with a function that returns the current <video> element
      *  (or null if not found yet) and a status callback. Site adapters are
