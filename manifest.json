@@ -12,13 +12,25 @@
   "permissions": ["storage"],
   "host_permissions": [
     "https://*.netflix.com/*",
+    "https://*.hulu.com/*",
+    "https://*.disneyplus.com/*",
     "https://*.firebaseio.com/*",
     "https://*.firebasedatabase.app/*"
   ],
   "content_scripts": [
     {
       "matches": ["https://*.netflix.com/*"],
-      "js": ["content_scripts/sync-core.js", "content_scripts/netflix.js"],
+      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/netflix.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.hulu.com/*"],
+      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/hulu.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.disneyplus.com/*"],
+      "js": ["content_scripts/sync-core.js", "content_scripts/site-common.js", "content_scripts/disneyplus.js"],
       "run_at": "document_idle"
     }
   ]
