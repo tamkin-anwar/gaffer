@@ -24,13 +24,6 @@
     }
   }
   * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-  html, body {
-    /* the extension popup window's own frame isn't rounded on every
-       platform, so round and clip the content itself rather than rely on
-       that: this is what actually makes the popup read as rounded */
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
   body {
     width: 340px; margin: 0;
     font-family: var(--font);
