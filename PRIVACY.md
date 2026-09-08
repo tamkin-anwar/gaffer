@@ -30,3 +30,7 @@ Chat and notes data persists in the shared database for as long as the room exis
 This policy may be updated as Tether adds features. Check back here for the current version.
 
 Contact: [github.com/tamkin-anwar/tether/issues](https://github.com/tamkin-anwar/tether/issues)
+
+---
+
+Tether is built and run by Anwar Creative Studio. If anything here ever stops matching what the extension actually does, tell us directly.
