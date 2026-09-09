@@ -100,6 +100,7 @@
   .full { width: 100%; }
 
   .hint { font-size: 11.5px; color: var(--ink-soft); margin-top: 8px; line-height: 1.4; }
+  .peer-line { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; }
   .save-flash { font-size: 11px; color: var(--green); opacity: 0; transition: opacity 0.3s; height: 14px; margin-top: 6px; }
   .save-flash.show { opacity: 1; }
   .err-flash { font-size: 11.5px; color: var(--red); margin-top: 8px; line-height: 1.4; }
@@ -144,6 +145,7 @@
       <div class="room-code" id="roomCode">······</div>
       <button class="btn secondary full" id="copyRoom">Copy code</button>
       <div class="hint">Send this to whoever you're watching with. They just need this code, nothing else to set up.</div>
+      <div class="peer-line"><span class="dot" id="peerDot"></span><span id="peerText">Checking for the other person...</span></div>
     </div>
 
     <div class="card">

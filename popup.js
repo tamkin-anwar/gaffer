@@ -23,11 +23,29 @@ const sendChatBtn = document.getElementById('sendChat');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const changeDbLink = document.getElementById('changeDbLink');
+const peerDot = document.getElementById('peerDot');
+const peerText = document.getElementById('peerText');
 
 let dbUrl = null;
 let roomId = null;
-let myClientId = 'p_' + Math.random().toString(36).slice(2, 10); // per-popup-session, only used to style my own chat bubbles
+// Persisted (see resolveClientId), not regenerated per popup-open: it has to
+// stay stable both so old chat bubbles don't flip from "me" to "them" the
+// next time the popup is opened, and so presence can tell "my other tab"
+// apart from an actual second person in the room.
+let myClientId = null;
 let chatPoll = null;
+let presenceHeartbeat = null;
+let presencePoll = null;
+const PRESENCE_HEARTBEAT_MS = 5000;
+const PRESENCE_STALE_MS = 12000; // a couple missed heartbeats before we call someone gone, not just between beats
+
+function resolveClientId(cb) {
+  chrome.storage.local.get(['clientId'], (stored) => {
+    if (stored.clientId) { myClientId = stored.clientId; cb(); return; }
+    myClientId = 'u_' + Math.random().toString(36).slice(2, 10);
+    chrome.storage.local.set({ clientId: myClientId }, cb);
+  });
+}
 
 function randomRoomCode() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
@@ -109,6 +127,39 @@ function enterRoom(newRoomId) {
   loadChat();
   clearInterval(chatPoll);
   chatPoll = setInterval(loadChat, 4000);
+
+  clearInterval(presenceHeartbeat);
+  writePresence();
+  presenceHeartbeat = setInterval(writePresence, PRESENCE_HEARTBEAT_MS);
+  clearInterval(presencePoll);
+  pollPresence();
+  presencePoll = setInterval(pollPresence, PRESENCE_HEARTBEAT_MS);
+}
+
+// ---------------------------------------------------------------------
+// presence: is the other person's Tether actually active right now, in
+// this same room, not just "did we both once type in a matching code".
+// There's no true onDisconnect over plain REST (see sync-core.js for why
+// this extension avoids the Firebase SDK), so this is a heartbeat: each
+// side writes its own timestamp regularly, and anyone else's timestamp
+// still being fresh is read as "they're here". The content script on an
+// actual streaming tab writes the same heartbeat, so this also reflects
+// someone who's watching right now even if their popup isn't open.
+function writePresence() {
+  if (!dbUrl || !roomId || !myClientId) return;
+  fetch(roomUrl('presence/' + myClientId), { method: 'PUT', body: JSON.stringify({ ts: Date.now() }) }).catch(() => {});
+}
+
+function pollPresence() {
+  if (!dbUrl || !roomId) return;
+  fetch(roomUrl('presence')).then((r) => r.json()).then((data) => {
+    const now = Date.now();
+    const peerOnline = Object.entries(data || {}).some(
+      ([clientId, entry]) => clientId !== myClientId && entry && now - entry.ts < PRESENCE_STALE_MS
+    );
+    peerDot.className = 'dot' + (peerOnline ? ' connected' : '');
+    peerText.textContent = peerOnline ? 'Someone else is in this room' : "Waiting for the other person...";
+  }).catch(() => {});
 }
 
 copyRoomBtn.addEventListener('click', () => {
@@ -190,10 +241,12 @@ chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat()
 // ---------------------------------------------------------------------
 // boot
 // ---------------------------------------------------------------------
-chrome.storage.sync.get(['dbUrl', 'roomId'], async (stored) => {
-  dbUrl = stored.dbUrl || DEFAULT_DB_URL;
-  dbUrlInput.value = dbUrl;
-  const ok = await testConnection();
-  if (ok && !stored.dbUrl) chrome.storage.sync.set({ dbUrl }); // remember we're on the default, harmless either way
-  enterRoom(stored.roomId || randomRoomCode());
+resolveClientId(() => {
+  chrome.storage.sync.get(['dbUrl', 'roomId'], async (stored) => {
+    dbUrl = stored.dbUrl || DEFAULT_DB_URL;
+    dbUrlInput.value = dbUrl;
+    const ok = await testConnection();
+    if (ok && !stored.dbUrl) chrome.storage.sync.set({ dbUrl }); // remember we're on the default, harmless either way
+    enterRoom(stored.roomId || randomRoomCode());
+  });
 });

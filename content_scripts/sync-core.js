@@ -20,11 +20,16 @@
   // playback sync still works the moment two people share a room code.
   const DEFAULT_DB_URL = 'https://tether-643cf-default-rtdb.asia-southeast1.firebasedatabase.app';
 
-  const CLIENT_ID = 'c_' + Math.random().toString(36).slice(2, 10);
+  // Resolved once, from storage, before anything else runs (see resolveClientId
+  // below). Shared with the popup's own copy of this same logic so that a
+  // presence entry written from either place is recognizable as "me", not
+  // mistaken for a second person in the room.
+  let CLIENT_ID = null;
   const APPLY_REMOTE_GUARD_MS = 400; // suppress re-broadcasting a change we just applied ourselves
   const DRIFT_CHECK_MS = 2000;
   const DRIFT_TOLERANCE_S = 0.5;
   const CLOCK_RECALIBRATE_MS = 60000;
+  const PRESENCE_HEARTBEAT_MS = 5000;
 
   let config = null;       // { roomId, dbUrl }
   let video = null;
@@ -33,10 +38,22 @@
   let lastRemote = null;    // { time, ts, playing }, used for drift correction
   let driftTimer = null;
   let clockTimer = null;
+  let presenceTimer = null;
   let serverOffsetMs = 0;   // add to Date.now() to estimate the Firebase server's clock
   let onStatus = () => {};  // callback(status: 'connected'|'disconnected'|'no-room')
 
   function log(...args) { console.log('[Tether]', ...args); }
+
+  // A random ID regenerated on every page load would make it impossible to
+  // tell "my own other tab" apart from "the other person" in the presence
+  // list, so this is persisted once per browser profile instead.
+  function resolveClientId(cb) {
+    chrome.storage.local.get(['clientId'], (stored) => {
+      if (stored.clientId) { CLIENT_ID = stored.clientId; cb(); return; }
+      CLIENT_ID = 'u_' + Math.random().toString(36).slice(2, 10);
+      chrome.storage.local.set({ clientId: CLIENT_ID }, cb);
+    });
+  }
 
   function roomUrl(path) {
     return `${config.dbUrl.replace(/\/$/, '')}/rooms/${encodeURIComponent(config.roomId)}/${path}.json`;
@@ -112,12 +129,24 @@
     }
   }
 
+  // A heartbeat rather than a true onDisconnect: the REST + SSE approach this
+  // extension deliberately uses (see the file header) has no equivalent of
+  // the Firebase SDK's connection-aware onDisconnect, so presence is inferred
+  // from "has this client written a timestamp recently" instead.
+  function writePresence() {
+    if (!config || !CLIENT_ID) return;
+    fetch(roomUrl('presence/' + CLIENT_ID), { method: 'PUT', body: JSON.stringify({ ts: Date.now() }) }).catch(() => {});
+  }
+
   function connect() {
     if (es) es.close();
     if (clockTimer) clearInterval(clockTimer);
+    if (presenceTimer) clearInterval(presenceTimer);
     if (!config || !config.roomId || !config.dbUrl) { onStatus('no-room'); return; }
     calibrateClock();
     clockTimer = setInterval(calibrateClock, CLOCK_RECALIBRATE_MS);
+    writePresence();
+    presenceTimer = setInterval(writePresence, PRESENCE_HEARTBEAT_MS);
     es = new EventSource(roomUrl('sync'));
     es.addEventListener('put', (e) => {
       try { applyRemote(JSON.parse(e.data).data); } catch (err) { /* ignore malformed frames */ }
@@ -159,7 +188,6 @@
   // Public API used by site adapters (window.TetherSync.*)
   // ---------------------------------------------------------------------
   window.TetherSync = {
-    clientId: CLIENT_ID,
     /** Call once, with a function that returns the current <video> element
      *  (or null if not found yet) and a status callback. Site adapters are
      *  responsible for finding the right element and re-calling setVideo
@@ -167,9 +195,11 @@
      *  change, for instance). */
     init(statusCallback) {
       onStatus = statusCallback || onStatus;
-      chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
-        config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
-        connect();
+      resolveClientId(() => {
+        chrome.storage.sync.get(['roomId', 'dbUrl'], (stored) => {
+          config = { roomId: stored.roomId, dbUrl: stored.dbUrl || DEFAULT_DB_URL };
+          connect();
+        });
       });
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area !== 'sync') return;
